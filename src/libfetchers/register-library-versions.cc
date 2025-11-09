@@ -4,7 +4,7 @@
 #include "nix/util/library-versions.hh"
 #include "nix/util/fmt.hh"
 
-#include <git2/global.h>
+#include <git2-experimental/global.h>
 
 namespace nix {
 

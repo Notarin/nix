@@ -36,7 +36,7 @@ deps_private += gtest
 gmock = dependency('gmock')
 deps_private += gmock
 
-libgit2 = dependency('libgit2')
+libgit2 = dependency('libgit2-experimental')
 deps_private += libgit2
 
 subdir('nix-meson-build-support/common')

@@ -5,7 +5,7 @@
 #include "nix/fetchers/git-utils.hh"
 #include "nix/util/url.hh"
 
-#include <git2.h>
+#include <git2-experimental.h>
 #include <gtest/gtest.h>
 
 #include <filesystem>

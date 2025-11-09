@@ -36,7 +36,7 @@ config_priv_h = configure_file(
 nlohmann_json = dependency('nlohmann_json', version : '>= 3.9')
 deps_public += nlohmann_json
 
-libgit2 = dependency('libgit2', version : '>= 1.9')
+libgit2 = dependency('libgit2-experimental', version : '>= 1.9')
 deps_private += libgit2
 
 subdir('nix-meson-build-support/common')

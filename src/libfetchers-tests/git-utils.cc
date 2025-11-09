@@ -4,17 +4,17 @@
 #include "nix/util/tests/gmock-matchers.hh"
 
 #include <gmock/gmock.h>
-#include <git2/global.h>
-#include <git2/repository.h>
-#include <git2/signature.h>
-#include <git2/types.h>
-#include <git2/object.h>
-#include <git2/tag.h>
+#include <git2-experimental/global.h>
+#include <git2-experimental/repository.h>
+#include <git2-experimental/signature.h>
+#include <git2-experimental/types.h>
+#include <git2-experimental/object.h>
+#include <git2-experimental/tag.h>
 #include <gtest/gtest.h>
 #include "nix/util/serialise.hh"
 
-#include <git2/blob.h>
-#include <git2/tree.h>
+#include <git2-experimental/blob.h>
+#include <git2-experimental/tree.h>
 
 namespace nix::fetchers {
 

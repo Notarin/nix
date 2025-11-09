@@ -18,31 +18,43 @@
 #include "nix/util/pool.hh"
 #include "nix/util/deleter.hh"
 
-#include <git2/version.h>
-#include <git2/attr.h>
-#include <git2/blob.h>
-#include <git2/branch.h>
-#include <git2/commit.h>
-#include <git2/config.h>
-#include <git2/describe.h>
-#include <git2/errors.h>
-#include <git2/global.h>
-#include <git2/index.h>
-#include <git2/indexer.h>
-#include <git2/object.h>
-#include <git2/odb.h>
-#include <git2/odb_backend.h>
-#include <git2/refs.h>
-#include <git2/remote.h>
-#include <git2/repository.h>
-#include <git2/revparse.h>
-#include <git2/status.h>
-#include <git2/submodule.h>
-#include <git2/sys/odb_backend.h>
-#include <git2/sys/repository.h>
-#include <git2/sys/mempack.h>
-#include <git2/tag.h>
-#include <git2/tree.h>
+#include <git2-experimental/version.h>
+#include <git2-experimental/attr.h>
+#include <git2-experimental/blob.h>
+#include <git2-experimental/branch.h>
+#include <git2-experimental/commit.h>
+#include <git2-experimental/config.h>
+#include <git2-experimental/describe.h>
+#include <git2-experimental/errors.h>
+#include <git2-experimental/global.h>
+#include <git2-experimental/index.h>
+#include <git2-experimental/indexer.h>
+#include <git2-experimental/object.h>
+#include <git2-experimental/odb.h>
+#include <git2-experimental/odb_backend.h>
+#include <git2-experimental/refs.h>
+#include <git2-experimental/remote.h>
+#include <git2-experimental/repository.h>
+#include <git2-experimental/revparse.h>
+#include <git2-experimental/status.h>
+#include <git2-experimental/submodule.h>
+#include <git2-experimental/sys/odb_backend.h>
+#include <git2-experimental/sys/repository.h>
+#include <git2-experimental/sys/mempack.h>
+#include <git2-experimental/tag.h>
+#include <git2-experimental/tree.h>
+
+/* libgit2 >= 2.0, or 1.x built with EXPERIMENTAL_SHA256, both expose the
+   object-format-aware API (with slightly different names in 1.x). */
+#if LIBGIT2_VERSION_CHECK(2, 0, 0)
+#  define NIX_LIBGIT2_SHA256_API 1
+#elif defined(GIT_EXPERIMENTAL_SHA256)
+#  define NIX_LIBGIT2_SHA256_API 1
+#  define git_oid_from_raw git_oid_fromraw
+#  define git_odb_new_ext git_odb_new
+#else
+#  define NIX_LIBGIT2_SHA256_API 0
+#endif
 
 #include <boost/unordered/concurrent_flat_set.hpp>
 #include <boost/unordered/unordered_flat_map.hpp>
@@ -154,7 +166,7 @@ typedef std::unique_ptr<git_index, Deleter<git_index_free>> Index;
 static Hash toHash(const git_oid & oid)
 {
     HashAlgorithm algo;
-#if LIBGIT2_VERSION_CHECK(2, 0, 0)
+#if NIX_LIBGIT2_SHA256_API
     switch (oid.type) {
     case GIT_OID_SHA1:
         algo = HashAlgorithm::SHA1;
@@ -185,7 +197,7 @@ static void initLibGit2()
 static git_oid hashToOID(const Hash & hash)
 {
     git_oid oid;
-#if LIBGIT2_VERSION_CHECK(2, 0, 0)
+#if NIX_LIBGIT2_SHA256_API
     git_oid_t t;
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wswitch-enum"
@@ -388,7 +400,7 @@ struct GitRepoImpl : GitRepo, std::enable_shared_from_this<GitRepoImpl>
                enabling the specific backend.
                */
 
-#if LIBGIT2_VERSION_CHECK(2, 0, 0)
+#if NIX_LIBGIT2_SHA256_API
             git_odb_options odbOpts = GIT_ODB_OPTIONS_INIT;
             odbOpts.oid_type = git_repository_oid_type(repo.get());
             if (git_odb_new_ext(Setter(odb), &odbOpts))
@@ -398,14 +410,14 @@ struct GitRepoImpl : GitRepo, std::enable_shared_from_this<GitRepoImpl>
                 throw GitError("creating Git object database");
 #endif
 
-#if LIBGIT2_VERSION_CHECK(2, 0, 0)
+#if NIX_LIBGIT2_SHA256_API
             git_odb_backend_pack_options packOpts = GIT_ODB_OPTIONS_INIT;
             packOpts.oid_type = git_repository_oid_type(repo.get());
 #endif
             if (git_odb_backend_pack(
                     &packBackend,
                     (path / "objects").string().c_str()
-#if LIBGIT2_VERSION_CHECK(2, 0, 0)
+#if NIX_LIBGIT2_SHA256_API
                         , &packOpts // NOFORMAT
 #endif
                     ))
@@ -465,14 +477,14 @@ struct GitRepoImpl : GitRepo, std::enable_shared_from_this<GitRepoImpl>
         auto packFilesPath = std::filesystem::path(git_repository_path(repo.get())) / "objects/pack";
 
         Indexer indexer;
-#if LIBGIT2_VERSION_CHECK(2, 0, 0)
+#if NIX_LIBGIT2_SHA256_API
         git_indexer_options indexerOpts = GIT_INDEXER_OPTIONS_INIT;
         indexerOpts.oid_type = git_repository_oid_type(repo.get());
 #endif
         if (git_indexer_new(
                 Setter(indexer),
                 packFilesPath.string().c_str(),
-#if LIBGIT2_VERSION_CHECK(2, 0, 0)
+#if NIX_LIBGIT2_SHA256_API
                 &indexerOpts
 #else
                 0,
