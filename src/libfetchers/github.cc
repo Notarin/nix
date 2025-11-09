@@ -137,7 +137,7 @@ struct GitArchiveInputScheme : InputScheme
                 *ref);
 
         if (rev)
-            Hash::parseAny(*rev, HashAlgorithm::SHA1);
+            parseGitHash(*rev);
 
         if (ref && !isLegalRefName(*ref))
             throw BadURL("input %s contains an invalid branch/tag name", attrsToJSON(attrs));
@@ -427,8 +427,8 @@ struct GitHubInputScheme : GitArchiveInputScheme
             store.requireStoreObjectAccessor(downloadResult.storePath)->readFile(CanonPath::root));
 
         return RefInfo{
-            .rev = Hash::parseAny(std::string{json["sha"]}, HashAlgorithm::SHA1),
-            .treeHash = Hash::parseAny(std::string{json["commit"]["tree"]["sha"]}, HashAlgorithm::SHA1)};
+            .rev = parseGitHash(std::string{json["sha"]}),
+            .treeHash = parseGitHash(std::string{json["commit"]["tree"]["sha"]})};
     }
 
     DownloadUrl getDownloadUrl(const Settings & settings, const Input & input) const override
@@ -509,7 +509,7 @@ struct GitLabInputScheme : GitArchiveInputScheme
             store.requireStoreObjectAccessor(downloadResult.storePath)->readFile(CanonPath::root));
 
         if (json.is_array() && json.size() >= 1 && json[0]["id"] != nullptr) {
-            return RefInfo{.rev = Hash::parseAny(std::string(json[0]["id"]), HashAlgorithm::SHA1)};
+            return RefInfo{.rev = parseGitHash(std::string(json[0]["id"]))};
         }
         if (json.is_array() && json.size() == 0) {
             throw Error("No commits returned by GitLab API -- does the git ref really exist?");
@@ -615,7 +615,7 @@ struct SourceHutInputScheme : GitArchiveInputScheme
         if (!id)
             throw BadURL("in '%d', couldn't find ref '%d'", input.to_string(), ref);
 
-        return RefInfo{.rev = Hash::parseAny(*id, HashAlgorithm::SHA1)};
+        return RefInfo{.rev = parseGitHash(*id)};
     }
 
     DownloadUrl getDownloadUrl(const Settings & settings, const Input & input) const override

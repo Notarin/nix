@@ -1,4 +1,6 @@
 #include "nix/fetchers/attrs.hh"
+#include "nix/fetchers/fetchers.hh"
+#include "nix/fetchers/git-utils.hh"
 
 #include <nlohmann/json.hpp>
 
@@ -137,7 +139,7 @@ StringMap attrsToQuery(const Attrs & attrs)
 
 Hash getRevAttr(const Attrs & attrs, const std::string & name)
 {
-    return Hash::parseAny(getStrAttr(attrs, name), HashAlgorithm::SHA1);
+    return parseGitHash(getStrAttr(attrs, name));
 }
 
 } // namespace nix::fetchers

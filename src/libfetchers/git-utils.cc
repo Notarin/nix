@@ -1769,4 +1769,21 @@ const std::filesystem::path & gitProgram()
     return program;
 }
 
+Hash parseGitHash(std::string_view hashStr)
+{
+    HashAlgorithm algo;
+    switch (hashStr.size()) {
+    case 40:
+        algo = HashAlgorithm::SHA1;
+        break;
+    case 64:
+        algo = HashAlgorithm::SHA256;
+        break;
+    default:
+        throw Error(
+            "invalid git hash '%s': expected 40 (SHA1) or 64 (SHA256) hex characters, got %d", hashStr, hashStr.size());
+    }
+    return Hash::parseNonSRIUnprefixed(hashStr, algo);
+}
+
 } // namespace nix
